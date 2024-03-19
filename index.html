@@ -48,10 +48,11 @@
     <script src="https://cdn.jsdelivr.net/npm/web3@1.5.0/dist/web3.min.js"></script>
     <script>
         // Connect to Ethereum network
-        if (typeof web3 !== 'undefined') {
-            web3 = new Web3(web3.currentProvider);
+        if (typeof window.ethereum !== 'undefined') {
+            web3 = new Web3(window.ethereum);
+            window.ethereum.enable();
         } else {
-            web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+            alert("MetaMask is not installed!");
         }
 
         // Contract address and ABI
@@ -279,39 +280,37 @@
 
         var contract = new web3.eth.Contract(contractABI, contractAddress);
 
-        function placeBet() {
+        async function placeBet() {
             var betAmount = document.getElementById("betAmount").value;
             betAmount = web3.utils.toWei(betAmount, 'ether'); // Convert to wei
 
-            contract.methods.bet().send({value: betAmount})
-            .on('transactionHash', function(hash){
-                // Transaction hash received
-                document.getElementById("message").innerText = "Transaction pending... ";
-            })
-            .on('receipt', function(receipt){
-                // Transaction receipt received
+            try {
+                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                const from = accounts[0];
+
+                const result = await contract.methods.bet().send({from: from, value: betAmount});
+
+                // Transaction successful
                 document.getElementById("message").innerText = "Transaction successful!";
-            })
-            .on('error', function(error, receipt) {
-                // Error occurred
+            } catch (error) {
+                // Transaction failed
                 document.getElementById("message").innerText = "Transaction failed: " + error.message;
-            });
+            }
         }
 
-        function withdraw() {
-            contract.methods.withdraw().send()
-            .on('transactionHash', function(hash){
-                // Transaction hash received
-                document.getElementById("message").innerText = "Withdrawal pending... ";
-            })
-            .on('receipt', function(receipt){
-                // Transaction receipt received
+        async function withdraw() {
+            try {
+                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                const from = accounts[0];
+
+                const result = await contract.methods.withdraw().send({from: from});
+
+                // Withdrawal successful
                 document.getElementById("message").innerText = "Withdrawal successful!";
-            })
-            .on('error', function(error, receipt) {
-                // Error occurred
+            } catch (error) {
+                // Withdrawal failed
                 document.getElementById("message").innerText = "Withdrawal failed: " + error.message;
-            });
+            }
         }
     </script>
 </body>
