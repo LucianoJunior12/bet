@@ -67,7 +67,7 @@
             <label for="upperBound">Limite Superior:</label>
             <input type="number" id="upperBound" name="upperBound" min="0" max="100" step="0.01" required>
             <label for="betAmount">Quantia da Aposta (ETH):</label>
-            <input type="number" id="betAmount" name="betAmount" min="0" step="0.01" required>
+            <input type="number" id="betAmount" name="betAmount" min="0" step="0.000001" required>
             <button type="submit">Fazer Aposta</button>
         </form>
 
@@ -84,7 +84,7 @@
                 // Solicita acesso à conta do usuário
                 await window.ethereum.request({ method: 'eth_requestAccounts' });
                 
-                const contractAddress = '0x5230761096FC241f4a48869A7934da6Cb20d9FcD';
+                const contractAddress = '0xF20BF68F13A17461a94d3A9a8E47fe2341b1A980';
                 const contractAbi = [
 	{
 		"inputs": [],
