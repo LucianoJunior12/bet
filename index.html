@@ -1,24 +1,78 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Decentralized Gambling DApp</title>
+    <title>Tigrinho - Aposta Descentralizada</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #container {
+            text-align: center;
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            color: #333;
+        }
+    </style>
 </head>
 <body>
-    <h1>Decentralized Gambling DApp</h1>
-    
-    <form id="betForm">
-        <label for="lowerBound">Lower Bound:</label>
-        <input type="number" id="lowerBound" name="lowerBound" min="0" max="100" required>
-        <label for="upperBound">Upper Bound:</label>
-        <input type="number" id="upperBound" name="upperBound" min="0" max="100" required>
-        <label for="betAmount">Bet Amount (ETH):</label>
-        <input type="number" id="betAmount" name="betAmount" required>
-        <button type="submit">Place Bet</button>
-    </form>
+    <div id="container">
+        <h1>Tigrinho - Aposta Descentralizada</h1>
+        
+        <form id="betForm">
+            <label for="lowerBound">Limite Inferior:</label>
+            <input type="number" id="lowerBound" name="lowerBound" min="0" max="100" step="0.01" required>
+            <label for="upperBound">Limite Superior:</label>
+            <input type="number" id="upperBound" name="upperBound" min="0" max="100" step="0.01" required>
+            <label for="betAmount">Quantia da Aposta (ETH):</label>
+            <input type="number" id="betAmount" name="betAmount" min="0" step="0.01" required>
+            <button type="submit">Fazer Aposta</button>
+        </form>
 
-    <div id="result"></div>
+        <div id="result"></div>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.3.6/web3.min.js"></script>
     <script>
@@ -29,12 +83,9 @@
                 window.web3 = new Web3(window.ethereum);
                 // Solicita acesso à conta do usuário
                 await window.ethereum.request({ method: 'eth_requestAccounts' });
-            } else {
-                console.error('MetaMask não detectado');
-            }
-
-            const contractAddress = '0x5230761096FC241f4a48869A7934da6Cb20d9FcD';
-            const contractAbi = [
+                
+                const contractAddress = '0x5230761096FC241f4a48869A7934da6Cb20d9FcD';
+                const contractAbi = [
 	{
 		"inputs": [],
 		"stateMutability": "nonpayable",
@@ -181,27 +232,30 @@
 	}
 ];
 
-            const contract = new web3.eth.Contract(contractAbi, contractAddress);
+                const contract = new window.web3.eth.Contract(contractAbi, contractAddress);
 
-            document.getElementById('betForm').addEventListener('submit', async function(event) {
-                event.preventDefault();
+                document.getElementById('betForm').addEventListener('submit', async function(event) {
+                    event.preventDefault();
 
-                const lowerBound = parseInt(document.getElementById('lowerBound').value);
-                const upperBound = parseInt(document.getElementById('upperBound').value);
-                const betAmount = document.getElementById('betAmount').value;
+                    const lowerBound = parseFloat(document.getElementById('lowerBound').value);
+                    const upperBound = parseFloat(document.getElementById('upperBound').value);
+                    const betAmount = document.getElementById('betAmount').value;
 
-                try {
-                    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-                    const account = accounts[0];
+                    try {
+                        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                        const account = accounts[0];
 
-                    const tx = await contract.methods.placeBet(lowerBound, upperBound).send({ from: account, value: web3.utils.toWei(betAmount, 'ether') });
+                        const tx = await contract.methods.placeBet(lowerBound, upperBound).send({ from: account, value: window.web3.utils.toWei(betAmount, 'ether') });
 
-                    document.getElementById('result').innerHTML = 'Bet placed successfully!';
-                } catch (error) {
-                    console.error(error);
-                    document.getElementById('result').innerHTML = 'Error placing bet.';
-                }
-            });
+                        document.getElementById('result').innerHTML = 'Aposta feita com sucesso!';
+                    } catch (error) {
+                        console.error(error);
+                        document.getElementById('result').innerHTML = 'Erro ao fazer aposta.';
+                    }
+                });
+            } else {
+                console.error('MetaMask não detectado');
+            }
         });
     </script>
 </body>
