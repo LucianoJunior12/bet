@@ -1,91 +1,69 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tigrinho - Aposta Descentralizada</title>
+    <title>Single Player Bet</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        #container {
-            text-align: center;
-            background-color: #fff;
-            border-radius: 8px;
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
             padding: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 300px;
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #666;
-        }
-        input {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 15px;
             border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
+            border-radius: 5px;
         }
+
+        input, button {
+            margin-top: 10px;
+        }
+
         button {
-            background-color: #4CAF50;
-            color: white;
             padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
         }
+
         button:hover {
-            background-color: #45a049;
+            background-color: #0056b3;
         }
-        #result {
+
+        p {
             margin-top: 20px;
-            color: #333;
         }
     </style>
 </head>
 <body>
-    <div id="container">
-        <h1>Tigrinho - Aposta Descentralizada</h1>
-        
-        <form id="betForm">
-            <label for="lowerBound">Limite Inferior:</label>
-            <input type="number" id="lowerBound" name="lowerBound" min="0" max="100" step="0.01" required>
-            <label for="upperBound">Limite Superior:</label>
-            <input type="number" id="upperBound" name="upperBound" min="0" max="100" step="0.01" required>
-            <label for="betAmount">Quantia da Aposta (ETH):</label>
-            <input type="number" id="betAmount" name="betAmount" min="0" step="0.000001" required>
-            <button type="submit">Fazer Aposta</button>
-        </form>
-
-        <div id="result"></div>
+    <div class="container">
+        <h1>Single Player Bet</h1>
+        <label for="betAmount">Bet Amount (ETH): </label>
+        <input type="number" id="betAmount" min="0" step="0.01">
+        <button onclick="placeBet()">Place Bet</button>
+        <button onclick="withdraw()">Withdraw Balance</button>
+        <p id="message"></p>
     </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.3.6/web3.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.0/dist/web3.min.js"></script>
     <script>
-        window.addEventListener('load', async () => {
-            // Verifica se o MetaMask está instalado
-            if (typeof window.ethereum !== 'undefined') {
-                // Instancia o Web3
-                window.web3 = new Web3(window.ethereum);
-                // Solicita acesso à conta do usuário
-                await window.ethereum.request({ method: 'eth_requestAccounts' });
-                
-                const contractAddress = '0xF20BF68F13A17461a94d3A9a8E47fe2341b1A980';
-                const contractAbi = [
+        // Connect to Ethereum network
+        if (typeof web3 !== 'undefined') {
+            web3 = new Web3(web3.currentProvider);
+        } else {
+            web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+        }
+
+        // Contract address and ABI
+        var contractAddress = '0x258b10C35f4d9b90bdaFa733d5C25d130Ea2a194';
+        var contractABI = [
+	{
+		"inputs": [],
+		"name": "bet",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
 	{
 		"inputs": [],
 		"stateMutability": "nonpayable",
@@ -97,31 +75,13 @@
 			{
 				"indexed": true,
 				"internalType": "address",
-				"name": "user",
+				"name": "bettor",
 				"type": "address"
 			},
 			{
 				"indexed": false,
 				"internalType": "uint256",
 				"name": "amount",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "lowerBound",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "upperBound",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "payout",
 				"type": "uint256"
 			}
 		],
@@ -129,84 +89,137 @@
 		"type": "event"
 	},
 	{
-		"inputs": [],
-		"name": "depositFunds",
-		"outputs": [],
-		"stateMutability": "payable",
-		"type": "function"
-	},
-	{
 		"anonymous": false,
 		"inputs": [
 			{
 				"indexed": true,
 				"internalType": "address",
-				"name": "depositor",
+				"name": "player",
 				"type": "address"
 			},
 			{
 				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "FundsDeposited",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "recipient",
-				"type": "address"
+				"internalType": "enum SinglePlayerBet.Result",
+				"name": "result",
+				"type": "uint8"
 			},
 			{
 				"indexed": false,
 				"internalType": "uint256",
-				"name": "amount",
+				"name": "amountWon",
 				"type": "uint256"
 			}
 		],
-		"name": "FundsWithdrawn",
+		"name": "GameResult",
 		"type": "event"
 	},
 	{
 		"inputs": [
 			{
 				"internalType": "uint256",
-				"name": "lowerBound",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "upperBound",
+				"name": "_betAmount",
 				"type": "uint256"
 			}
 		],
-		"name": "placeBet",
-		"outputs": [],
-		"stateMutability": "payable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "withdrawFunds",
+		"name": "setBetAmount",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
+		"inputs": [],
+		"name": "withdraw",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
 		"inputs": [
 			{
+				"indexed": true,
 				"internalType": "address",
-				"name": "",
+				"name": "player",
 				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
 			}
 		],
-		"name": "balances",
+		"name": "Withdraw",
+		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "betAmount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "contractBalance",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "currentState",
+		"outputs": [
+			{
+				"internalType": "enum SinglePlayerBet.State",
+				"name": "",
+				"type": "uint8"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getContractBalance",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getTotalBets",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "MAX_BET_AMOUNT",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -229,34 +242,77 @@
 		],
 		"stateMutability": "view",
 		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "results",
+		"outputs": [
+			{
+				"internalType": "enum SinglePlayerBet.Result",
+				"name": "",
+				"type": "uint8"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalBets",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
 	}
 ];
 
-                const contract = new window.web3.eth.Contract(contractAbi, contractAddress);
+        var contract = new web3.eth.Contract(contractABI, contractAddress);
 
-                document.getElementById('betForm').addEventListener('submit', async function(event) {
-                    event.preventDefault();
+        function placeBet() {
+            var betAmount = document.getElementById("betAmount").value;
+            betAmount = web3.utils.toWei(betAmount, 'ether'); // Convert to wei
 
-                    const lowerBound = parseFloat(document.getElementById('lowerBound').value);
-                    const upperBound = parseFloat(document.getElementById('upperBound').value);
-                    const betAmount = document.getElementById('betAmount').value;
+            contract.methods.bet().send({value: betAmount})
+            .on('transactionHash', function(hash){
+                // Transaction hash received
+                document.getElementById("message").innerText = "Transaction pending... ";
+            })
+            .on('receipt', function(receipt){
+                // Transaction receipt received
+                document.getElementById("message").innerText = "Transaction successful!";
+            })
+            .on('error', function(error, receipt) {
+                // Error occurred
+                document.getElementById("message").innerText = "Transaction failed: " + error.message;
+            });
+        }
 
-                    try {
-                        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                        const account = accounts[0];
-
-                        const tx = await contract.methods.placeBet(lowerBound, upperBound).send({ from: account, value: window.web3.utils.toWei(betAmount, 'ether') });
-
-                        document.getElementById('result').innerHTML = 'Aposta feita com sucesso!';
-                    } catch (error) {
-                        console.error(error);
-                        document.getElementById('result').innerHTML = 'Erro ao fazer aposta.';
-                    }
-                });
-            } else {
-                console.error('MetaMask não detectado');
-            }
-        });
+        function withdraw() {
+            contract.methods.withdraw().send()
+            .on('transactionHash', function(hash){
+                // Transaction hash received
+                document.getElementById("message").innerText = "Withdrawal pending... ";
+            })
+            .on('receipt', function(receipt){
+                // Transaction receipt received
+                document.getElementById("message").innerText = "Withdrawal successful!";
+            })
+            .on('error', function(error, receipt) {
+                // Error occurred
+                document.getElementById("message").innerText = "Withdrawal failed: " + error.message;
+            });
+        }
     </script>
 </body>
 </html>
